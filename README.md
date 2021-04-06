@@ -18,10 +18,10 @@ The collected data the code refers to is available at http://data.dws.informatik
 The datasets for the different learners need to be generated from the three components (data_set_tweet_user_features + topics + text representation). Therefore the main method of the class DatasetUtils.DataSetCombiner can be executed. Combining also removes all attributes which are not used for learning. The dataset will then appear in the data folder.
 
 ## Learning
-The class Learning.LearningMain is responsible for the evaluation of the learners. Depending on which line is commented in, one can also evaluate the testset. The most important parameters throughout the code are the following
+The class *Learning.LearningMain* is responsible for the evaluation of the learners. Depending on which line is commented in, one can also evaluate the testset. The most important parameters throughout the code are the following
 * *all* refers to the use case (Use Case 2: all=0, Use Case 1: all=1)
 * *clf_name* refers to the learner. (nb = Naïve Bayes, dt = Decision Tree, svm = SVM, nn = Neural Network, xgb = XGBoost, rf = Random Forest)
-Voting and weighted voting can be performed in Learning.Voting for the whole dataset. The testset first has to be evaluated as described previously, then the respective line in the main method of Learning.TestsetInterpretation can be used. For weighted voting on the testset predict_proba needs to be true when evaluating in LearningMain.
+Voting and weighted voting can be performed in *Learning.Voting* for the whole dataset. The testset first has to be evaluated as described previously, then the respective line in the main method of *Learning.TestsetInterpretation* can be used. For weighted voting on the testset predict_proba needs to be true when evaluating in LearningMain.
 Learning might consume a lot of memory. The results were created with 16GB of RAM. If sufficient memory and cores are available nr_of_cores can be increased in line 65 in Learning.XValidation
 
 ## Further packages
