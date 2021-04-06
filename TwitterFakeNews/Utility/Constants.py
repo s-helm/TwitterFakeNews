@@ -1,0 +1,2 @@
+REAL = False
+FAKE = True

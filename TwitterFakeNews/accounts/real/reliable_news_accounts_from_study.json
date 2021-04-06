@@ -1,0 +1,25 @@
+{
+  "accounts":
+          [
+            "TheEconomist",
+            "BBCBreaking",
+            "NPR",
+            "NewsHour",
+            "WSJ",
+            "ABC",
+            "CBSNews",
+            "NBCNews",
+            "CNNBRK",
+            "USATODAY",
+            "googlenews",
+            "nytimes",
+            "washingtonpost",
+            "msnbc",
+            "guardian",
+            "business",
+            "newyorker",
+            "politico",
+            "YahooNews",
+            "FoxNews"
+          ]
+}
