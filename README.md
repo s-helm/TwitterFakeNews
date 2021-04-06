@@ -1,5 +1,5 @@
 # TwitterFakeNews
-This Projekt aims to build classification models for an automatically collected Fake News dataset from Twitter.
+This projekt aims to build classification models for an automatically collected Fake News dataset from Twitter.
 
 ## Data
 
