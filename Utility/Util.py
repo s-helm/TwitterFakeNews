@@ -3,7 +3,8 @@ import re
 
 import time
 
-from pandas.types.missing import array_equivalent
+#from pandas.types.missing import array_equivalent
+from pandas.core.dtypes.missing import array_equivalent
 
 emoticons_str = r"""
     (?:
@@ -130,7 +131,7 @@ def get_root_directory():
     folders = curr.split("\\")
     count = 0
     for i in reversed(folders):
-        if i == 'MasterThesisTwitter':
+        if i == 'TwitterFakeNews':
             break
         count += 1
     if count == 0:

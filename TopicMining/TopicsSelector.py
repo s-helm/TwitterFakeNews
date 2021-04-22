@@ -18,21 +18,25 @@ from Utility.Util import get_root_directory
 class TopicsSelector:
     topic_vector_dict = "../data/topic_models/"
 
-    def __init__(self, results_file="topics_results.csv", data=None):
+    def __init__(self, results_file="topics_results.csv", data=None, data_name=None):
         time = TimeUtils.get_time()
-        self.data_name = "data_for_topics_"+str(time.day)+"_"+str(time.month)+".csv"
+        if data_name:
+            self.data_name = data_name
+        else:
+            self.data_name = "data_for_topics_"+str(time.day)+"_"+str(time.month)+".csv"
         self.results_file = results_file
         if data is not None:
             # write_data_to_CSV(data, self.data_name)
             save_df_as_csv(data, self.data_name)
 
-    def create_topics(self, num_topics, save=False):
+    def create_topics(self, num_topics, save=False, modelname_prefix=''):
         """
         performs LDA with the given number of topics and creates a dataset with only topics from it
         :param num_topics: 
         :return: 
         """
         data = load_data_from_CSV(self.data_name)
+        data = data.reset_index(drop=True)
         tweet_model = TextModel()
         tweet_model.init_corpus(
             [[token for token in NLPUtils.str_list_to_list(tweet) if token != "USERMENTION" and token != "URL"] for
@@ -44,11 +48,11 @@ class TopicsSelector:
         df = tweet_model.get_topics_as_df()
 
         if save:
-            tweet_model.save_dict_topics(num_topics)
-            tweet_model.save_tf_idf_topic_model(num_topics)
-            tweet_model.save_lda_model(num_topics)
+            tweet_model.save_dict_topics(num_topics, modelname_prefix)
+            tweet_model.save_tf_idf_topic_model(num_topics, modelname_prefix)
+            tweet_model.save_lda_model(num_topics, modelname_prefix)
 
-        save_df_as_csv(df, get_root_directory() + "/data/data_topics_{}.csv".format(num_topics))
+        save_df_as_csv(df, get_root_directory() + "/data/topics_data/data_testset_topics_{}.csv".format(num_topics))
 
         data = pd.concat([data, df], axis=1)
         data = data.drop('tweet__additional_preprocessed_wo_stopwords', 1)
@@ -268,18 +272,18 @@ class TopicsSelector:
         tweet_model.save_tf_idf_topic_model('hdp')
 
 if __name__ == "__main__":
-    # create and evaluate topics
-    cols = ['tweet__additional_preprocessed_wo_stopwords', 'user__id', 'tweet__fake']
-    data = load_data_from_CSV("../data/data_set_tweet_user_features.csv")
-    data = data[cols]
-    data = data.reset_index(drop=True)
+    #-----create and evaluate topics-----------------------------------------------------------------------------------
+    #cols = ['tweet__additional_preprocessed_wo_stopwords', 'user__id', 'tweet__fake']
+    #data = load_data_from_CSV("../data/data_set_tweet_user_features.csv")
+    #data = data[cols]
+    #data = data.reset_index(drop=True)
     #
-    num_topics_list = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200]
+    #num_topics_list = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200]
     #
-    clfs = get_base_learners()
+    #clfs = get_base_learners()
 
-    t = TopicsSelector(results_file="results_topics_final.csv", data=data)
-    t.optimize_num_topics(clfs=clfs, grid=num_topics_list)
+    #t = TopicsSelector(results_file="results_topics_final.csv", data=data)
+    #t.optimize_num_topics(clfs=clfs, grid=num_topics_list)
     # t.evaluate_hdp_model(clfs=clfs)
 
     # plot results
@@ -296,5 +300,10 @@ if __name__ == "__main__":
     #
     # data = join_label_and_group(data=topic_vectors)
     # perform_x_val(data, get_base_learners('nb'), t.get_features(data))
+
+    #---build-LDA-on-testset-----------------------------------------------------------------------------------
+    t = TopicsSelector(results_file="", data_name="../data/testdata/testset_tweet_user_features_complete.csv")
+    t.create_topics(190, save=True, modelname_prefix='testset')
+
 
 

@@ -72,15 +72,15 @@ class Doc2Vec:
         for epoch in range(self.epochs):
             # self.corpus = list(self.corpus)
             # shuffle(self.corpus)
-            self.model.train(sentences=self.corpus, total_examples=self.model.corpus_count, epochs=self.model.iter)
+            self.model.train(documents=self.corpus, total_examples=self.model.corpus_count, epochs=self.model.iter)
             # self.model.alpha -= 0.002  # decrease the learning rate
             # self.model.min_alpha = self.model.alpha  # fix the learning rate, no deca
         # self.plotWords()
 
-        word = 'bad'
-        print("Most similar to {}: {}".format(word, self.model.most_similar(word)))
-        print("Most similar to {}: {}".format('trump', self.model.most_similar('trump')))
-        print("Most similar to {}: {}".format('merkel', self.model.most_similar('merkel')))
+        # word = 'bad'
+        # print("Most similar to {}: {}".format(word, self.model.most_similar(word)))
+        # print("Most similar to {}: {}".format('trump', self.model.most_similar('trump')))
+        # print("Most similar to {}: {}".format('merkel', self.model.most_similar('merkel')))
         # print(self.model.most_similar(positive=['germany','merkel'], negative=['united kingdom']))
 
 
@@ -100,7 +100,7 @@ class Doc2Vec:
         return pd.DataFrame(data=train_arrays, columns=["tweet__d2v_{}".format(i) for i in range(self.model_size)])
 
     def save_model(self, model_size, dm, epochs):
-        self.model.save('../data/d2v_models/doc2vec_model_{}_{}_{}.d2v'.format(model_size, dm, epochs))
+        self.model.save('../data/d2v_models_testset/doc2vec_model_{}_{}_{}.d2v'.format(model_size, dm, epochs))
 
     def load_model(self, filename):
         self.model = gensim.models.Doc2Vec.load(filename)

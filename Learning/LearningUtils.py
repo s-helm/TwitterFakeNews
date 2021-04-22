@@ -43,9 +43,17 @@ def get_dataset(clf):
     return load_data_from_CSV(datasets + 'data_set_' + clf + '.csv')
 
 
-def get_testset(clf):
+def get_testset(clf, testset_only=False):
+    """
+    returns the test dataset
+    :param clf: if True, the test dataset with topic and text representation trained on the testset is used
+    :return:
+    """
     datasets = get_root_directory() + "/data/testdata/"
-    return load_data_from_CSV(datasets + 'testset_' + clf + '.csv')
+    if testset_only:
+        return load_data_from_CSV(datasets + 'testset_only_' + clf + '.csv')
+    else:
+        return load_data_from_CSV(datasets + 'testset_' + clf + '.csv')
 
 
 def get_dataset_features(clf):

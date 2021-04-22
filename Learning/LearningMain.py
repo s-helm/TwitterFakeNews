@@ -16,10 +16,11 @@ from FeatureEngineering.FeatureSelector import get_label, \
     get_feature_selection
 from Learning.EvaluationMetrics import print_result, get_result
 from Learning.LearningUtils import get_base_learners, get_dataset, save_result, \
-    get_learner_names, get_testset, get_learner_and_features
+    get_learner_names, get_testset, get_learner_and_features, get_raw_dataset
 from Learning.XValidation import XValidation
 from Utility.CSVUtils import load_data_from_CSV, save_df_as_csv
 from Utility.TimeUtils import TimeUtils
+from Utility.Util import get_root_directory
 
 
 def perform_x_val(data, clf, features, standardize=False):
@@ -38,6 +39,13 @@ def perform_x_val(data, clf, features, standardize=False):
 
     xVal = XValidation(features)
     xVal.groupKFold(data, clf, n_splits=10, standardize=standardize)
+
+    # debug decision tree
+    #from sklearn import tree
+    #X = data[features]
+    #clf = tree.DecisionTreeClassifier().fit(data[features],data[get_label()])
+    #tree.export_graphviz(clf, "tree.model")
+
     acc = xVal.get_accuracy()
     p = xVal.get_precision()
     r = xVal.get_recall()
@@ -148,25 +156,6 @@ def get_baselines(all):
         clf = get_base_learners(name=clf_name)
         f1, conf_matr = perform_x_val(data, clf, features=features)
 
-def build_testset(all, clf_name):
-    train = get_dataset(clf_name)
-    test = get_testset(clf_name)
-
-    features_to_extend = ['tweet__id', 'user__id', 'tweet__fake']
-    tmp_features = get_feature_selection(train, all)
-    tmp_features.extend(features_to_extend)
-    train = train[tmp_features]
-    test = test[tmp_features]
-
-    ids = get_real_news_to_include()
-    to_shift = train[train['tweet__id'].isin(ids)]
-    train = train[~train['tweet__id'].isin(ids)]
-    print("Shape train: {}".format(train.shape))
-
-    test = test.append(to_shift)
-    test = test.reset_index(drop=True)
-    print("Shape test: {}".format(test.shape))
-    return test
 
 def evaluate_testset(all, clfs=None, predict_proba=False):
     """
@@ -223,7 +212,6 @@ def evaluate_testset(all, clfs=None, predict_proba=False):
         test = None
         gc.collect()
 
-
 def evaluate_component(filename, clf_name):
     """
     evaluates a componen
@@ -256,11 +244,14 @@ def xval_on_testset(clf_name, all):
     performs a 10-fold cross-validation on the testset
     """
     clf = get_base_learners(clf_name)
-    data = build_testset(all, clf_name)
+    data = get_testset(clf_name, testset_only=True)
     features = get_feature_selection(data, all=all)
     print(features)
     print("Shape of data for training: {}".format(data.shape))
-    perform_x_val(data=data, clf=clf, features=features, standardize=True)
+    if clf_name in ['nn', 'svm']:
+        perform_x_val(data=data, clf=clf, features=features, standardize=True)
+    else:
+        perform_x_val(data=data, clf=clf, features=features, standardize=False)
 
 
 if __name__ == "__main__":
@@ -268,7 +259,7 @@ if __name__ == "__main__":
     # Use Case 1: all=1, Use Case 2: all=0
 
     # evaluate the final results
-    evaluate_best_configurations(clf_name='nb', all=1)
+    # evaluate_best_configurations(clf_name='nb', all=1)
 
     # evaluate the testset
     # evaluate_testset(all=1, clfs=['nb'])
@@ -280,4 +271,6 @@ if __name__ == "__main__":
     # evaluate_component('../data/text_data/unigram_bow.csv', 'nb')
 
     # cross-validate test set
-    # xval_on_testset(clf_name='svm', all=1)
+    xval_on_testset(clf_name='dt', all=0)
+
+

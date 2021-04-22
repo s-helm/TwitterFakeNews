@@ -100,7 +100,7 @@ class TextModel:
         #                            num_topics=num_topics)
 
         self.lda = models.LdaMulticore(self.corpus_tfidf, id2word=self.dictionary,
-                                   num_topics=num_topics, passes=2)
+                                   num_topics=num_topics, passes=2, minimum_probability=0.01)
         self.corpus_lda = self.lda[self.corpus_tfidf]  # create a double wrapper over the original corpus: bow->tfidf->fold-in-lda
         self.lda.print_topics(num_topics)
         # for doc in self.corpus_lda:  # both bow->tfidf and tfidf->lsi transformations are actually executed here, on the fly (topic, degree towards topic)
@@ -296,11 +296,11 @@ class TextModel:
         plt.show()
 
 
-    def save_lda_model(self, num_topics):
-        self.lda.save(TextModel.folder_topic_models+'lda_{}_topics.model'.format(num_topics))
+    def save_lda_model(self, num_topics, prefix=''):
+        self.lda.save(TextModel.folder_topic_models+prefix+'lda_{}_topics.model'.format(num_topics))
 
-    def load_lda_model(self, num_topics):
-        self.lda = gensim.models.LdaModel.load(TextModel.folder_topic_models+'lda_{}_topics.model'.format(num_topics))
+    def load_lda_model(self, num_topics, prefix=''):
+        self.lda = gensim.models.LdaModel.load(TextModel.folder_topic_models+prefix+'lda_{}_topics.model'.format(num_topics))
 
 
     def save_hdp_model(self):
@@ -317,11 +317,11 @@ class TextModel:
         self.tf_idf = gensim.models.TfidfModel.load(self.folder_tfidf+'tf_idf.model')
 
 
-    def save_tf_idf_topic_model(self, num_topics):
-        self.tf_idf.save(self.folder_topic_models+'tf_idf_{}.model'.format(num_topics))
+    def save_tf_idf_topic_model(self, num_topics, prefix = ''):
+        self.tf_idf.save(self.folder_topic_models+prefix+'tf_idf_{}.model'.format(num_topics))
 
-    def load_tf_idf_topic_model(self, num_topics):
-        self.tf_idf = gensim.models.TfidfModel.load(self.folder_topic_models+'tf_idf_{}.model'.format(num_topics))
+    def load_tf_idf_topic_model(self, num_topics, prefix = ''):
+        self.tf_idf = gensim.models.TfidfModel.load(self.folder_topic_models+prefix+'tf_idf_{}.model'.format(num_topics))
 
 
     def save_tf_idf_bow_model(self, variant):
@@ -359,11 +359,11 @@ class TextModel:
         self.dictionary = gensim.corpora.Dictionary.load(self.folder_tfidf+'word.dict')
 
 
-    def save_dict_topics(self, num_topics):
-        self.dictionary.save(self.folder_topic_models+'words_{}.dict'.format(num_topics))
+    def save_dict_topics(self, num_topics, prefix=''):
+        self.dictionary.save(self.folder_topic_models + prefix + 'words_{}.dict'.format(num_topics))
 
-    def load_dict_topics(self, num_topics):
-        self.dictionary = gensim.corpora.Dictionary.load(self.folder_topic_models+'words_{}.dict'.format(num_topics))
+    def load_dict_topics(self, num_topics, prefix=''):
+        self.dictionary = gensim.corpora.Dictionary.load(self.folder_topic_models + prefix + 'words_{}.dict'.format(num_topics))
 
 
     def save_bow_dict(self, variant):

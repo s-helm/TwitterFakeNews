@@ -14,11 +14,15 @@ from Utility.TimeUtils import TimeUtils
 
 class TextModelSelector:
 
-    text_model_vector_dir = "../data/text_data/"
+    text_model_vector_dir = "../data/text_data_testset/"
 
-    def __init__(self, results_file, data=None):
+    def __init__(self, results_file, data=None, data_name=None):
         time = TimeUtils.get_time()
-        self.data_name = "data_for_text_model_"+str(time.day)+"_"+str(time.month)+".csv"
+        if data_name:
+            self.data_name = data_name
+        else:
+            self.data_name = "data_for_text_model_"+str(time.day)+"_"+str(time.month)+".csv"
+
         self.results_file = results_file
         if data is not None:
             # write_data_to_CSV(data, self.data_name)
@@ -27,10 +31,13 @@ class TextModelSelector:
     def create_bag_of_words(self, min_doc_frequency, no_above):
         """
         creates a bag of words with different filters
-        :param num_topics: 
+        :param min_doc_frequency:
+        :param no_above: tokens are in no more than no_above*100% of the document
         :return: 
         """
         data = load_data_from_CSV(self.data_name)
+        cols_bow = ['tweet__additional_preprocessed_wo_stopwords', 'user__id', 'tweet__fake']
+        data = data[cols_bow]
         tweet_model = TextModel()
 
         tweets = [NLPUtils.str_list_to_list(tweet) for tweet in data['tweet__additional_preprocessed_wo_stopwords'].tolist()]
@@ -49,7 +56,7 @@ class TextModelSelector:
         # for col in data.columns:
         #     print(data[col].describe())
 
-        data = data.drop('tweet__additional_preprocessed_wo_stopwords', 1)
+        data = data.drop(cols_bow, 1)
         return data
 
 
@@ -101,7 +108,7 @@ class TextModelSelector:
         print(data.index)
         print(fv.index)
 
-        save_df_as_csv(fv, '../data/d2v_models_{}_{}_{}.csv'.format(model_size, dm, epochs))
+        save_df_as_csv(fv, '../data/text_data/d2v_models_testset_{}_{}_{}.csv'.format(model_size, dm, epochs))
 
         data = data.reset_index(drop=True)
         fv.reset_index(drop=True)
@@ -310,9 +317,11 @@ class TextModelSelector:
 
 
 if __name__ == "__main__":
-    clfs = get_base_learners()
-    data = load_data_from_CSV("../data/data_set_tweet_user_features.csv")
-    data = data.reset_index(drop=True)
+    #clfs = get_base_learners()
+    #data = load_data_from_CSV("../data/data_set_tweet_user_features.csv")
+    #data = load_data_from_CSV("../data/testdata/testset_tweet_user_features_complete.csv")
+    #data = data.reset_index(drop=True)
+    #print(data.shape)
 
     # ---------bag-of-words-(variant-0)-----------------------------------------------------------
     # cols_bow = ['tweet__additional_preprocessed_wo_stopwords', 'user__id', 'tweet__fake']
@@ -332,12 +341,19 @@ if __name__ == "__main__":
     # t_bow_bi.optimize_text_model(clfs=clfs, grid=grid, variant=1)
 
     #---------doc2vec-(variant-2)----------------------------------------------------------------
-    cols_d2v = ['tweet__additional_preprocessed_text', 'user__id', 'tweet__fake']
-    data = data[cols_d2v]
+    #cols_d2v = ['tweet__additional_preprocessed_text', 'user__id', 'tweet__fake']
+    #data = data[cols_d2v]
 
-    grid = {"size":[100, 200, 300], "dm":[0,1], "epochs":[20]}
-    t = TextModelSelector(results_file="results_doc2vec_final.csv", data=data)
-    t.optimize_text_model(clfs=clfs, grid=grid, variant=2)
+    #grid = {"size":[100, 200, 300], "dm":[0,1], "epochs":[20]}
+    #t = TextModelSelector(results_file="results_doc2vec_final.csv", data=data)
+    #t.optimize_text_model(clfs=clfs, grid=grid, variant=2)
+
+    #---------build-doc2vec-and-BoW-model-on-Testset-----------------------------------------------------
+    # testset_tweet_user_features_complete = testset_tweet_user_features + similar instances from the training test for balancing
+    t = TextModelSelector(results_file="", data_name="../data/testdata/testset_tweet_user_features_complete.csv")
+    #t.create_doc2vec(model_size=100, dm=0, epochs=20)
+    bow = t.create_bag_of_words(1, 0.4)
+    save_df_as_csv(bow, '../data/text_data/testset_only_unigram_bow.csv')
 
 
     # TextModelSelector.create_d2v_datasets(save=False)

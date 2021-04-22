@@ -4,7 +4,7 @@ import pandas as pd
 
 from DatasetUtils.SampleCreator import get_sample
 from FeatureEngineering.FeatureSelector import get_feature_selection
-from Learning.LearningUtils import get_dataset
+from Learning.LearningUtils import get_dataset, get_testset
 from Preprocessing import Preprocessor
 from Utility.CSVUtils import load_data_from_CSV, save_df_as_csv
 from Utility.Util import get_root_directory
@@ -168,12 +168,11 @@ def combine_data_sets():
         print(data.shape)
         save_df_as_csv(data, datasets+'data_set_'+conf+'.csv')
 
-
-def combine_tesetsets():
+def combine_testsets(testset_only=False):
     """
     combines doc2vec, topic model, tweet and user feature vectors to build the testset. 
     Does not include tweets that are shifted from the training data.
-    :param norm: 
+    :param testset_only: True if LDA and Doc2Vec models trained on testdata shoud be used
     :return: 
     """
     text_model_vector_dir = get_root_directory()+"/data/text_data/"
@@ -181,32 +180,57 @@ def combine_tesetsets():
     datasets = get_root_directory()+"/data/testdata/"
 
     doc2vec = dict()
+    topics = dict()
 
-    doc2vec['nb'] = "testset_d2v_300.csv"
-    doc2vec['dt'] = "testset_unigram_bow.csv"
-    doc2vec['svm'] = "testset_d2v_300.csv"
-    doc2vec['nn'] = "testset_d2v_100.csv"
-    doc2vec['xgb'] = "testset_d2v_300.csv"
-    doc2vec['rf'] = "testset_unigram_bow.csv"
+    if testset_only:
+        doc2vec['nb'] = "d2v_models_testset_300_0_20.csv"
+        doc2vec['dt'] = "testset_only_unigram_bow.csv"
+        doc2vec['svm'] = "d2v_models_testset_300_0_20.csv"
+        doc2vec['nn'] = "d2v_models_testset_100_0_20.csv"
+        doc2vec['xgb'] = "d2v_models_testset_300_0_20.csv"
+        doc2vec['rf'] = "testset_only_unigram_bow.csv"
+
+        topics['nb'] = "data_testset_topics_170.csv"
+        topics['dt'] = "data_testset_topics_170.csv"
+        topics['svm'] = "data_testset_topics_90.csv"
+        topics['nn'] = "data_testset_topics_190.csv"
+        topics['xgb'] = "data_testset_topics_90.csv"
+        topics['rf'] = "data_testset_topics_200.csv"
+    else:
+        doc2vec['nb'] = "testset_d2v_300.csv"
+        doc2vec['dt'] = "testset_unigram_bow.csv"
+        doc2vec['svm'] = "testset_d2v_300.csv"
+        doc2vec['nn'] = "testset_d2v_100.csv"
+        doc2vec['xgb'] = "testset_d2v_300.csv"
+        doc2vec['rf'] = "testset_unigram_bow.csv"
 
     clfs = ['nb','dt','nn','svm','xgb','rf']
 
     for clf in clfs:
         text_model_vector = load_data_from_CSV(text_model_vector_dir+doc2vec[clf])
-
-        topic_vector = load_data_from_CSV(topic_vector_dir+'testset_topics_'+clf+'.csv')
-        data = load_data_from_CSV(get_root_directory()+"/data/testdata/testset_tweet_user_features.csv")
+        if testset_only:
+            topic_vector = load_data_from_CSV(topic_vector_dir+topics[clf])
+            data = load_data_from_CSV(get_root_directory()+"/data/testdata/testset_tweet_user_features_complete.csv")
+        else:
+            topic_vector = load_data_from_CSV(topic_vector_dir+'testset_topics_'+clf+'.csv')
+            data = load_data_from_CSV(get_root_directory()+"/data/testdata/testset_tweet_user_features.csv")
         data = Preprocessor.replace_missing_possibly_sensitive(data)
         features = get_feature_selection(data)
         features.extend(['tweet__fake', 'user__id', 'tweet__id'])
         data = data[features]
 
         data = pd.concat([data, text_model_vector], axis=1)
-        data = pd.concat([data, topic_vector], axis=1)
+
+        # for testset only topics won't be used, because no topics (with large number of topics) could be infered
+        if not testset_only:
+            data = pd.concat([data, topic_vector], axis=1)
 
         # print(data.index)
         print(data.shape)
-        save_df_as_csv(data, datasets+'testset_'+clf+'.csv')
+        if testset_only:
+            save_df_as_csv(data, datasets+'testset_only_'+clf+'.csv')
+        else:
+            save_df_as_csv(data, datasets+'testset_'+clf+'.csv')
 
 
 def get_real_news_to_include():
@@ -242,6 +266,33 @@ def append_all_attributes_not_in_data(data, data_with_features):
     print("new data: {}".format(data.shape))
     return data
 
+def build_testset(all, clf_name, keep_all_features=False):
+    if clf_name:
+        train = get_dataset(clf_name)
+        test = get_testset(clf_name)
+    else:
+        train = load_data_from_CSV(get_root_directory() + "/data/data_set_tweet_user_features.csv")
+        test = load_data_from_CSV(get_root_directory() + "/data/testdata/testset_tweet_user_features.csv")
+
+    features_to_extend = ['tweet__id', 'user__id', 'tweet__fake']
+    if keep_all_features:
+        tmp_features = [col for col in train.columns]
+    else:
+        tmp_features = get_feature_selection(train, all)
+
+    tmp_features.extend(features_to_extend)
+    train = train[tmp_features]
+    test = test[tmp_features]
+
+    ids = get_real_news_to_include()
+    to_shift = train[train['tweet__id'].isin(ids)]
+    train = train[~train['tweet__id'].isin(ids)]
+    print("Shape train: {}".format(train.shape))
+
+    test = test.append(to_shift)
+    test = test.reset_index(drop=True)
+    print("Shape test: {}".format(test.shape))
+    return test
 
 if __name__ == "__main__":
 
@@ -249,7 +300,11 @@ if __name__ == "__main__":
     # join_users()
 
     # combine datasets (tweet/user features, Doc2Vec/BOW, topics) to a dataset for each learner
-    combine_data_sets()
+    # combine_data_sets()
 
     # combine datasets (tweet/user features, Doc2Vec/BOW, topics) to a testset for each learner
-    # combine_tesetsets()
+    combine_testsets(testset_only=True)
+
+    # create testset
+    # data = build_testset(0, clf_name=None)
+    # save_df_as_csv(data, '../data/testdata/testset_tweet_user_features_complete.csv')

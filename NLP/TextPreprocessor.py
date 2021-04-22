@@ -7,7 +7,7 @@ from nltk import PorterStemmer, WordNetLemmatizer
 
 from NLP.Emoji import Emojis
 from NLP.NLPUtils import NLPUtils
-from NLP.SpellChecker import SpellChecker
+#from NLP.SpellChecker import SpellChecker
 
 
 class TextPreprocessor:
